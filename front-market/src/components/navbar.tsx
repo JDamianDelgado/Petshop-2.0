@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../app/store";
+import { RootState } from "../app/redux/store";
 import { authActions } from "../features/auth/authSlice";
 import { cartActions } from "@/features/cart/cartSlice";
 import CartModal from "./CartModal";
@@ -49,6 +49,9 @@ export default function Navbar() {
                 <button onClick={() => dispatch(cartActions.openCart())}>
                   Carrito
                 </button>
+              </li>
+              <li>
+                <Link href="/productos">Productos</Link>
               </li>
             </>
           ) : (

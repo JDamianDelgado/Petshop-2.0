@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { jwtDecode } from "jwt-decode";
 
 interface userState {
@@ -167,12 +167,84 @@ const registerSlice = createSlice({
   },
 });
 
+interface ForgotPasswordResponse {
+  message: string;
+}
+export const forgotPassword = createAsyncThunk<
+  ForgotPasswordResponse,
+  string,
+  { rejectValue: string }
+>("auth/forgotPassword", async (email, thunkApi) => {
+  try {
+    const baseDeDatos = process.env.NEXT_PUBLIC_API_URL;
+    const response = await fetch(`${baseDeDatos}/auth/forgotPassword`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      return thunkApi.rejectWithValue(
+        errorData.message || "Error al recuperar password"
+      );
+    }
+    const result = await response.json();
+    return result;
+  } catch {
+    return thunkApi.rejectWithValue("Error al recuperar password");
+  }
+});
+
+interface ForgotPasswordState {
+  loading: boolean;
+  success: boolean;
+  error: string | null;
+  message: string | null;
+}
+
+const initialStateForgot: ForgotPasswordState = {
+  loading: false,
+  success: false,
+  error: null,
+  message: null,
+};
+
+const forgotPasswordSlice = createSlice({
+  name: "ForgotPassword",
+  initialState: initialStateForgot,
+  reducers: {
+    resetForgotPasswordState: (state) => {
+      state.loading = false;
+      state.success = false;
+      state.error = null;
+      state.message = null;
+    },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload;
+    },
+    setSuccess: (state, action: PayloadAction<boolean>) => {
+      state.success = action.payload;
+    },
+    setError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload;
+    },
+    setMessage: (state, action: PayloadAction<string | null>) => {
+      state.message = action.payload;
+    },
+  },
+});
+export const forgotPasswordReducer = forgotPasswordSlice.reducer;
 export const loginReducer = loginSlice.reducer;
 export const registerReducer = registerSlice.reducer;
 const { clearRegisterState } = registerSlice.actions;
 const { logout } = loginSlice.actions;
+const { resetForgotPasswordState } = forgotPasswordSlice.actions;
 
 export const authActions = {
   logout,
   clearRegisterState,
+  resetForgotPasswordState,
 };

@@ -10,8 +10,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/Entities/User.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { LoginDto, RegisterDto } from './Guard/auth.Dto';
+import { LoginDto, RegisterDto } from './auth.Dto';
 import { Carrito } from 'src/Entities/Carrito.entity';
+import { NodemailerService } from '../nodemailer/nodemailer.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +22,7 @@ export class AuthService {
     @InjectRepository(Carrito)
     private readonly cartRepository: Repository<Carrito>,
     private readonly jwtService: JwtService,
+    private readonly nodemailerService: NodemailerService,
   ) {}
   // Validador de password
   validPassword(pass1: string, pass2: string): boolean {
@@ -87,6 +89,52 @@ export class AuthService {
       };
       const token = this.jwtService.sign(payload);
       return { token };
+    }
+  }
+
+  async allUsers() {
+    return this.userRepository.find();
+  }
+
+  async forgotPassword(email: string) {
+    console.log('Email recibido en forgotPassword:', email);
+
+    const findUser = await this.userRepository.findOne({
+      where: { email: email },
+    });
+    if (!findUser) {
+      throw new NotFoundException('No se encontro el email solicitado');
+    } else {
+      console.log('Usuario encontrado:', findUser);
+
+      const payload = { sub: findUser.idUser, email: findUser.email };
+      const token = this.jwtService.sign(payload, { expiresIn: '15m' });
+
+      const resetLink = `${process.env.NODEMAILER_LINK_RESETPASSWORD}/${token}`;
+      await this.nodemailerService.sendMail({
+        to: findUser.email,
+        subject: 'Restablecer la contraseña',
+        text: 'Haz click en el siguiente enlace para restablecer tu contraseña',
+        html: `<p>Haz clic <a href="${resetLink}">aquí</a> para restablecer tu contraseña.</p>`,
+      });
+      return { message: 'Se envio un correo para restablecer password' };
+    }
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    try {
+      const payload = await this.jwtService.verify(token);
+      const user = await this.userRepository.findOne({
+        where: { idUser: payload.sub },
+      });
+      if (!user) {
+        throw new NotFoundException('Usuario no encontrado');
+      }
+      user.password = await bcrypt.hash(newPassword, 10);
+      await this.userRepository.save(user);
+      return { message: 'Contraseña restablecida con exito' };
+    } catch {
+      throw new UnauthorizedException('Token invalido o expirado');
     }
   }
 }

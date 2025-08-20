@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { databaseConfig } from 'config/supabase';
+import { databaseConfig } from 'config/supabase/supabase';
 import { AuthModule } from './Modulos/Auth/auth.module';
 import { ProductModule } from './Modulos/Products/products.module';
 import { CartModule } from './Modulos/Cart/cart.module';
+import { CarrouselModule } from './Modulos/Carrousel/carrousel.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { CartModule } from './Modulos/Cart/cart.module';
     AuthModule,
     ProductModule,
     CartModule,
+    CarrouselModule,
   ],
   controllers: [],
   providers: [],

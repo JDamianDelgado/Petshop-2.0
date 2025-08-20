@@ -8,7 +8,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Carrousel } from 'src/Entities/Carrousel.entity';
 import { Repository } from 'typeorm';
-import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryUploadResponse } from './interfaceCarrousel';
 
 @Injectable()
 export class CarrouselService {
@@ -20,35 +21,31 @@ export class CarrouselService {
 
   //crear
   async createCarrousel(
-    file: Express.Multer.File,
+    fileBuffer: Buffer,
     titulo: string,
     descripcion: string,
   ) {
-    if (!file || !titulo) throw new BadRequestException('Faltan datos');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    if (!file.path) {
-      throw new BadRequestException('Archivo sin ruta (no es diskStorage)');
-    }
-
-    const uploadResult: UploadApiResponse =
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-      await this.cloudinaryClient.uploader.upload(file.path, {
-        folder: 'carrousel',
-        resource_type: 'image',
-      });
-
-    if (!uploadResult.secure_url)
-      throw new BadRequestException('Error al subir la imagen');
-
-    const newCarrousel = this.carrouselRepository.create({
+    const uploadResult: CloudinaryUploadResponse = await new Promise<any>(
+      (resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: 'carrousel' },
+          (error, result) => {
+            if (error)
+              return reject(new Error(error.message || JSON.stringify(error)));
+            resolve(result);
+          },
+        );
+        stream.end(fileBuffer);
+      },
+    );
+    const carrousel = this.carrouselRepository.create({
       titulo,
       descripcion,
-
       imageUrl: uploadResult.secure_url,
-      activo: true,
       publicId: uploadResult.public_id,
     });
-    return await this.carrouselRepository.save(newCarrousel);
+
+    return this.carrouselRepository.save(carrousel);
   }
 
   //eiminar
@@ -72,5 +69,9 @@ export class CarrouselService {
 
     await this.carrouselRepository.delete(idCarrousel);
     return { message: 'Eliminado correctamente' };
+  }
+  //todas las iamgenes
+  async allImages() {
+    return this.carrouselRepository.find();
   }
 }

@@ -33,7 +33,7 @@ export const fetchProducts = createAsyncThunk(
 //Get product
 export const viewProduct = createAsyncThunk(
   "product/viewProduct",
-  async (idProduct, thunkApi) => {
+  async (idProduct: string, thunkApi) => {
     try {
       const response = await fetch(`${baseDeDatos}/product/${idProduct}`, {
         method: "GET",

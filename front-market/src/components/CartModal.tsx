@@ -1,6 +1,6 @@
 "use client";
 
-import { RootState } from "@/app/store";
+import { RootState } from "@/app/redux/store";
 import { cartActions } from "@/features/cart/cartSlice";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";

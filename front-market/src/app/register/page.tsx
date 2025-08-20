@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../store";
+import { AppDispatch, RootState } from "../redux/store";
 import { registerUser } from "@/features/auth/authSlice";
 
 export default function Register() {

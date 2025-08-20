@@ -1,22 +1,20 @@
+"use client";
+import { Product } from "@/features/products/interfaceProduct";
 import Image from "next/image";
-
-interface Product {
-  imageUrl: string;
-  name: string;
-  description: string;
-  price: number;
-  stock: number;
-}
 
 interface CardsProductProps {
   product: Product;
+  onClick?: () => void;
 }
 
-export default function CardsProduct({ product }: CardsProductProps) {
+export default function CardsProduct({ product, onClick }: CardsProductProps) {
   return (
-    <div className="border rounded-lg p-4 m-2 shadow-lg">
+    <div
+      className="border rounded-lg p-4 m-2 shadow-lg cursor-pointer hover:shadow-xl transition"
+      onClick={onClick}
+    >
       <Image
-        src={"/images/next.svg"}
+        src={"/image.png"}
         alt={product.name}
         width={200}
         height={200}

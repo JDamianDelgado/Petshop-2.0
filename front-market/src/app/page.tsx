@@ -1,25 +1,30 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import { useEffect } from "react";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
-import Carousel from "@/components/carrusel";
 import CardsProduct from "@/components/cardsProducts";
-import Noticias from "@/components/Noticias";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "./store";
+import { AppDispatch, RootState } from "./redux/store";
 import { fetchProducts } from "@/features/products/thunksProduct";
+import { fetchCarrousel } from "@/features/carrousel/thunksCarrousel";
+import Carrousel from "@/components/carrusel";
 
 export default function Home() {
-  const [imageCarrusel, setImageCarrusel] = useState<string[]>([]);
-  const [allNoticias, setAllNoticias] = useState<any[]>([]);
   const dispatch = useDispatch<AppDispatch>();
   const { products, loading, error } = useSelector(
     (state: RootState) => state.productReducer
   );
+  const {
+    item: carrousel,
+    loading: loadingCarrousel,
+    error: errorCarrousel,
+  } = useSelector((state: RootState) => state.carrouselReducer);
 
   useEffect(() => {
     dispatch(fetchProducts());
+    dispatch(fetchCarrousel());
   }, [dispatch]);
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -30,16 +35,22 @@ export default function Home() {
           Bienvenidos a Petshop
         </h1>
 
+        {/* Carrusel */}
         <section className="mb-12">
-          {imageCarrusel.length === 0 ? (
+          {loadingCarrousel ? (
+            <p className="text-center text-gray-500">Cargando imágenes...</p>
+          ) : errorCarrousel ? (
+            <p className="text-center text-red-500">{errorCarrousel}</p>
+          ) : carrousel.length === 0 ? (
             <p className="text-center text-gray-500">
               No hay imágenes disponibles para el carrusel
             </p>
           ) : (
-            <Carousel images={imageCarrusel} />
+            <Carrousel items={carrousel} />
           )}
         </section>
 
+        {/*productos*/}
         <section className="w-full max-w-4xl mx-auto mb-12">
           <h2 className="text-2xl font-semibold mb-4 text-center">
             Productos destacados
@@ -55,23 +66,10 @@ export default function Home() {
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {products.map((product, index) => (
-                <CardsProduct key={index} product={product} />
+              {products.map((product) => (
+                <CardsProduct key={product.idProduct} product={product} />
               ))}
             </div>
-          )}
-        </section>
-
-        <section className="w-full max-w-4xl mx-auto mb-12">
-          <h2 className="text-2xl font-semibold mb-4 text-center">
-            Últimas noticias
-          </h2>
-          {allNoticias.length === 0 ? (
-            <p className="text-center text-gray-500">
-              No hay noticias disponibles
-            </p>
-          ) : (
-            <Noticias noticias={allNoticias} />
           )}
         </section>
       </main>
